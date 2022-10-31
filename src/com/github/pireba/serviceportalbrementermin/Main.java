@@ -9,7 +9,7 @@ import java.time.format.DateTimeParseException;
 public class Main {
 	
 	public static void main(String[] args) {
-		if ( args.length != 2 ) {
+		if ( args.length < 2 ) {
 			printUsage();
 		}
 		
@@ -30,7 +30,12 @@ public class Main {
 		}
 		
 		try {
-			new Terminprüfung(url, date);
+			if ( args.length == 3 ) {
+				String location = args[2];
+				new Terminprüfung(url, date, location);
+			} else {
+				new Terminprüfung(url, date);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,10 +62,13 @@ public class Main {
 		sb.append("ARGUMENTE:\n");
 		sb.append("    [url]        Die URL zum Serviceportal Bremen.\n");
 		sb.append("    [datum]      Das Datum gegen welches geprüft werden soll.\n");
-		sb.append("                 Format: yyyy-mm-dd");
+		sb.append("                 Format: yyyy-mm-dd\n");
+		sb.append("    [standort]   Der Standort der abgefragt werden soll. (Optional)\n");
 		sb.append("\n");
 		sb.append("BEISPIEL:\n");
-		sb.append("    java -jar serviceportal-bremen-termin.jar https://www.service.bremen.de/dienstleistungen/internationalen-fuehrerschein-beantragen-8356 2022-10-05");
+		sb.append("    java -jar serviceportal-bremen-termin.jar \"https://www.service.bremen.de/dienstleistungen/internationalen-fuehrerschein-beantragen-8356\" \"2022-10-05\"\n");
+		sb.append("\n");
+		sb.append("    java -jar serviceportal-bremen-termin.jar \"https://www.service.bremen.de/dienstleistungen/internationalen-fuehrerschein-beantragen-8356\" \"2022-10-05\" \"BürgerServiceCenter-Mitte\"\n");
 		
 		System.err.println(sb.toString());
 		System.exit(1);

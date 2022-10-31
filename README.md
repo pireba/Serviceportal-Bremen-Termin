@@ -21,8 +21,12 @@ ARGUMENTE:
     [url]        Die URL zum Serviceportal Bremen.
     [datum]      Das Datum gegen welches geprüft werden soll.
                  Format: yyyy-mm-dd
+    [standort]   Der Standort der abgefragt werden soll. (Optional)
+
 BEISPIEL:
-    java -jar serviceportal-bremen-termin.jar https://www.service.bremen.de/dienstleistungen/internationalen-fuehrerschein-beantragen-8356 2022-10-05
+    java -jar serviceportal-bremen-termin.jar "https://www.service.bremen.de/dienstleistungen/internationalen-fuehrerschein-beantragen-8356" "2022-10-05"
+
+    java -jar serviceportal-bremen-termin.jar "https://www.service.bremen.de/dienstleistungen/internationalen-fuehrerschein-beantragen-8356" "2022-10-05" "BürgerServiceCenter-Mitte"
 ```
 
 # Beispiel

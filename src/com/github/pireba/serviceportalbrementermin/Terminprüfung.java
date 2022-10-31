@@ -10,6 +10,7 @@ import java.util.Locale;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 public class Terminprüfung {
 	
@@ -22,23 +23,24 @@ public class Terminprüfung {
 		Connection connection = Jsoup.connect(url);
 		this.document = connection.get();
 		
-		String newDateText = this.getNewDateText();
-		if ( newDateText.isEmpty() ) {
-			throw new IllegalStateException("Es konnte kein Datum abgerufen werden.");
-		}
-		LocalDateTime newDate = this.parseTimestamp(newDateText);
+		LocalDateTime newDate = this.getNewDate();
 		
 		if ( this.checkTimestamp(currentDate, newDate) ) {
 			String location = this.getLocation();
-			if ( location.isEmpty() ) {
-				throw new IllegalStateException("Es konnte kein Standort abgerufen werden.");
-			}
-			
 			String bookingLink = this.getBookingLink();
-			if ( bookingLink.isEmpty() ) {
-				throw new IllegalStateException("Es konnte kein Buchungslink abgerufen werden.");
-			}
 			
+			System.out.println(this.createMessage(location, newDate, bookingLink));
+		}
+	}
+	
+	public Terminprüfung(String url, LocalDate currentDate, String location) throws IOException, ParseException {
+		Connection connection = Jsoup.connect(url);
+		this.document = connection.get();
+		
+		LocalDateTime newDate = this.getNewDateForLocation(location);
+		
+		if ( this.checkTimestamp(currentDate, newDate) ) {
+			String bookingLink = this.getBookingLinkForLocation(location);
 			System.out.println(this.createMessage(location, newDate, bookingLink));
 		}
 	}
@@ -64,15 +66,58 @@ public class Terminprüfung {
 		return document.select("#collapse-stellen > div > a").attr("href");
 	}
 	
-	private String getLocation() {
-		return document.select("#collapse-stellen > div > strong").text();
+	private Elements getElementsForLocation(String location) {
+		Elements elements = document.select(".list > li:has(a:containsOwn("+location+"))");
+		
+		if ( elements == null || elements.isEmpty() ) {
+			throw new IllegalStateException("Es konnten keine Elemente zu einem Standort abgerufen werden.");
+		}
+		
+		return elements;
 	}
 	
-	private String getNewDateText() {
-		return document.select("#collapse-stellen > div > a").text();
+	private String getLocation() {
+		String location = document.select("#collapse-stellen > div > strong").text();
+		
+		if ( location == null || location.isEmpty() ) {
+			throw new IllegalStateException("Es konnte kein Standort abgerufen werden.");
+		}
+		
+		return location;
+	}
+	
+	private LocalDateTime getNewDate() {
+		String timestamp = document.select("#collapse-stellen > div > a").text();
+		return this.parseTimestamp(timestamp);
+	}
+	
+	private LocalDateTime getNewDateForLocation(String location) {
+		Elements elements = this.getElementsForLocation(location);
+		
+		if ( elements.isEmpty() || elements.size() < 1 ) {
+			throw new IllegalStateException("Es konnte kein Datum abgerufen werden.");
+		}
+		
+		String timestamp = elements.get(0).ownText();
+		return this.parseTimestamp(timestamp);
 	}
 	
 	private LocalDateTime parseTimestamp(String timestamp) {
+		if ( timestamp == null || timestamp.isEmpty() ) {
+			throw new IllegalStateException("Das Datum ist leer und kann nicht umgewandelt werden.");
+		}
+		
 		return LocalDateTime.parse(timestamp, DATE_FORMATTER);
+	}
+	
+	private String getBookingLinkForLocation(String location) {
+		Elements elements = this.getElementsForLocation(location);
+		String bookingLink = elements.select("a:containsOwn(Frühestmöglicher Termin)").attr("href");
+		
+		if ( bookingLink == null || bookingLink.isEmpty() ) {
+			throw new IllegalStateException("Es konnte kein Buchungslink abgerufen werden.");
+		}
+		
+		return bookingLink;
 	}
 }
